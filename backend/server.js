@@ -187,6 +187,16 @@ app.get("/api/subjects", async (req, res) => {
   }
 });
 
+app.get("/api/subjects/:subjectId", async (req, res) => {
+  try {
+    const subject = await Subject.findById(req.params.subjectId);
+    res.json(subject);
+  } catch (error) {
+    console.error("Error fetching Subject:", error);
+    res.status(500).json({ error: "Failed to fetch Subject" });
+  }
+});
+
 app.put("/api/subjects/:id", async (req, res) => {
   try {
     await Subject.findByIdAndUpdate(req.params.id, req.body);
