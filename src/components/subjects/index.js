@@ -20,23 +20,7 @@ const Users = () => {
         </div>
         <div style={actionStyle}>
           <Link to="/edit-subject" style={linkStyle}>
-            {/* <img src="/images/view-users-icon.png" alt="View Users" style={iconStyle} /> */}
             <span>Edit a Subject</span>
-          </Link>
-        </div>
-        <div style={actionStyle}>
-          <Link to="/add-ct-details" style={linkStyle}>
-            <span>Add CTs and SEE question details</span>
-          </Link>
-        </div>
-        <div style={actionStyle}>
-          <Link to="/add-ct-marks" style={linkStyle}>
-            <span>Add CTs and SEE results</span>
-          </Link>
-        </div>
-        <div style={actionStyle}>
-          <Link to="/add-assignment-marks" style={linkStyle}>
-            <span>Add Assignment results</span>
           </Link>
         </div>
       </div>

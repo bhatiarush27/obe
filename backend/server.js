@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema({
     unique: true,
     match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   },
+  level: {
+    type: String,
+    required: true,
+  }
 });
 
 const User = mongoose.model("users", userSchema);

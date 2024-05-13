@@ -8,8 +8,10 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
+  Button,
 } from "@mui/material";
+import ReactHTMLTableToExcel from "react-html-table-to-excel";
+import "../../App.css";
 
 const FinalReport = () => {
   const [ct1Details, setCT1Details] = React.useState();
@@ -21,6 +23,7 @@ const FinalReport = () => {
   const [ct2CompDetails, setCT2CompDetails] = React.useState();
   const [seeCompDetails, setSEECompDetails] = React.useState();
   const [assCompDetails, setAssCompDetails] = React.useState();
+  const [cesCompDetails, setCESCompDetails] = React.useState();
   const { subjectId } = useParams();
 
   React.useEffect(() => {
@@ -59,6 +62,10 @@ const FinalReport = () => {
             `http://localhost:5001/api/subjects/${subjectId}`
           );
           setSubjectDetails(response8.data);
+          const response9 = await axios.get(
+            `http://localhost:5001/api/results/ces-${subjectId}`
+          );
+          setCESCompDetails(response9.data);
         } catch (error) {
           console.error("Error fetching components:", error);
         }
@@ -76,9 +83,15 @@ const FinalReport = () => {
     !ct2CompDetails ||
     !seeCompDetails ||
     !assCompDetails ||
-    !subjectDetails
+    !subjectDetails ||
+    !cesCompDetails
   )
-    return <></>;
+    return (
+      <h4>
+        One of CT1, CT2, Semester End Examination, or Course Exit Survey results
+        are not added for the selected subject
+      </h4>
+    );
 
   const questions = [
     ...ct1CompDetails.questions,
@@ -256,12 +269,7 @@ const FinalReport = () => {
   levels[levels.length - 2] = "K4";
   levels[levels.length - 1] = "K4";
 
-  console.log("arushAll", coDetails, levels, subjectDetails);
-
-  //CO-Questions relevance
   const cos = subjectDetails.cos.map((co) => co.coCode);
-
-  console.log("arush69", cos, coDetails);
 
   const cieCOQuestionsRelevance = Array(cos.length).fill(1);
   const seeCOQuestionsRelevance = Array(cos.length).fill(0);
@@ -270,8 +278,6 @@ const FinalReport = () => {
       2
   );
   const seeCOWiseAttainment = Array(cos.length).fill(0);
-
-  console.log("arush69", cieCOWiseAttainment, seeCOWiseAttainment);
 
   coDetails.forEach((coDetail, i) => {
     if (
@@ -298,16 +304,6 @@ const FinalReport = () => {
     (data) => +data.toFixed(2)
   );
 
-  console.log(
-    "arush69",
-    cos,
-    coDetails,
-    cieCOQuestionsRelevance,
-    seeCOQuestionsRelevance,
-    cieCOWiseAttainment,
-    seeCOWiseAttainment
-  );
-
   const getAttainmentLevels = (points) => {
     if (points >= 0.9) return 3;
     else if (points >= 0.8) return 2;
@@ -316,11 +312,51 @@ const FinalReport = () => {
     return 0;
   };
 
+  const getAttainmentLevelsCes = (points) => {
+    if (points >= 4) return 3;
+    else if (points >= 2) return 2;
+    else if (points >= 1) return 1;
+
+    return 0;
+  };
+
+  const cesMarksTotal = [0, 0, 0, 0, 0];
+  cesCompDetails?.results?.map((result, i) => {
+    result.marks.map((mark, ind) => {
+      cesMarksTotal[ind] += mark.obtainedMarks;
+    });
+  });
+
+  cesMarksTotal.forEach(
+    (marks, i) => (cesMarksTotal[i] = marks / ct1Details.results.length)
+  );
+
   return (
     <div>
-      <h5 style={{ textAlign: "center" }}>Course Outcome Assessment</h5>
-      <TableContainer component={Paper} style={{ marginBottom: "50px" }}>
-        <Table>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          width: "90%",
+          margin: "0 auto",
+        }}
+      >
+        <h5 style={{ textAlign: "center" }}>Course Outcome Assessment</h5>
+        <ReactHTMLTableToExcel
+          id="final-report-table-xls-button"
+          className="download-table-xls-button"
+          table="final-report-table"
+          filename="final-report"
+          sheet="final-report"
+          buttonText="Download Table CSV"
+        />
+      </div>
+
+      <TableContainer style={{ marginBottom: "50px" }}>
+        <Table
+          style={{ width: "90%", margin: "0 auto", border: "1px solid black" }}
+          id="final-report-table"
+        >
           <TableHead>
             <TableRow>
               <TableCell
@@ -497,9 +533,30 @@ const FinalReport = () => {
           </TableBody>
         </Table>
       </TableContainer>
-      <h5 style={{ textAlign: "center" }}>Overall Attainment Matrix</h5>
-      <TableContainer component={Paper}>
-        <Table>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          width: "70%",
+          margin: "0 auto",
+        }}
+      >
+        <h5 style={{ textAlign: "center" }}>Overall Attainment Matrix</h5>
+        <ReactHTMLTableToExcel
+          id="test-table-xls-button"
+          className="download-table-xls-button"
+          table="overall-attainment-matrix"
+          filename="overall-attainment-matrix"
+          sheet="overall-attainment-matrix"
+          buttonText="Download Table CSV"
+        />
+      </div>
+      <TableContainer>
+        <Table
+          style={{ width: "70%", margin: "0 auto", border: "1px solid black" }}
+          id="overall-attainment-matrix"
+        >
           <TableHead>
             <TableRow>
               <TableCell></TableCell>
@@ -587,6 +644,56 @@ const FinalReport = () => {
                       seeFinalCOWiseAttainment[i] * 0.67
                     ).toFixed(2)
                   )}
+                </TableCell>
+                <TableCell style={{ textAlign: "center" }}>
+                  {cesMarksTotal[i]}
+                </TableCell>
+                <TableCell style={{ textAlign: "center" }}>
+                  {getAttainmentLevelsCes(cesMarksTotal[i])}
+                </TableCell>
+                <TableCell style={{ textAlign: "center" }}>
+                  {(
+                    getAttainmentLevels(
+                      (
+                        cieFinalCOWiseAttainment[i] * 0.33 +
+                        seeFinalCOWiseAttainment[i] * 0.67
+                      ).toFixed(2)
+                    ) *
+                      0.8 +
+                    getAttainmentLevelsCes(cesMarksTotal[i]) * 0.2
+                  ).toFixed(2)}
+                </TableCell>
+                <TableCell style={{ textAlign: "center" }}>{2}</TableCell>
+                <TableCell
+                  style={{
+                    backgroundColor:
+                      (
+                        getAttainmentLevels(
+                          (
+                            cieFinalCOWiseAttainment[i] * 0.33 +
+                            seeFinalCOWiseAttainment[i] * 0.67
+                          ).toFixed(2)
+                        ) *
+                          0.8 +
+                        getAttainmentLevelsCes(cesMarksTotal[i]) * 0.2
+                      ).toFixed(2) > 2
+                        ? "lightGreen"
+                        : "pink",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {(
+                    getAttainmentLevels(
+                      (
+                        cieFinalCOWiseAttainment[i] * 0.33 +
+                        seeFinalCOWiseAttainment[i] * 0.67
+                      ).toFixed(2)
+                    ) *
+                      0.8 +
+                    getAttainmentLevelsCes(cesMarksTotal[i]) * 0.2
+                  ).toFixed(2) > 2
+                    ? "ATTAINED"
+                    : "NOT ATTAINED"}
                 </TableCell>
               </TableRow>
             ))}
