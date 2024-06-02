@@ -1,83 +1,47 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-const containerStyle = {
-  maxWidth: "400px",
-  margin: "0 auto",
-  padding: "50px",
-  backgroundColor: "white",
-  textAlign: "center",
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "10px",
-  margin: "20px auto",
-  fontSize: "16px",
-  border: "1px solid #ccc",
-  borderRadius: "5px",
-};
-
-const buttonStyle = {
-  width: "100%",
-  padding: "10px",
-  fontSize: "16px",
-  backgroundColor: "#007bff",
-  color: "#fff",
-  border: "none",
-  borderRadius: "5px",
-  cursor: "pointer",
-};
-
-const SubjectReport = () => {
-  const [subjects, setSubjects] = useState([]);
-  const [selectedSubject, setSelectedSubject] = useState("");
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const response = await axios.get("http://localhost:5001/api/subjects");
-        setSubjects(response.data);
-      } catch (error) {
-        console.error("Error fetching subjects:", error);
-      }
-    };
-
-    fetchSubjects();
-  }, []);
-
-  const handleSubmit = () => {
-    if (selectedSubject) {
-      navigate(`/final-subject-report/${selectedSubject}`);
-    } else {
-      alert("Please select a subject.");
-    }
-  };
-
+const Reports = () => {
   return (
     <div style={containerStyle}>
-      <h2>Subject Report</h2>
-      <label htmlFor="subjectSelect">Select Subject:</label>
-      <select
-        id="subjectSelect"
-        value={selectedSubject}
-        onChange={(e) => setSelectedSubject(e.target.value)}
-        style={inputStyle}
-      >
-        <option value="">Select Subject</option>
-        {subjects.map((subject) => (
-          <option key={subject._id} value={subject._id}>
-            {subject.name}
-          </option>
-        ))}
-      </select>
-      <button onClick={handleSubmit} style={buttonStyle}>
-        Submit
-      </button>
+      <h2>Report Actions</h2>
+      <div style={actionContainerStyle}>
+        <div style={actionStyle}>
+          <Link to="/final-report" style={linkStyle}>
+            <span>View Subject Report</span>
+          </Link>
+        </div>
+        <div style={actionStyle}>
+          <Link to="/semester-report" style={linkStyle}>
+            <span>View Semester report</span>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default SubjectReport;
+// Styles
+const containerStyle = {
+  textAlign: 'center',
+  color: 'gray'
+};
+
+const actionContainerStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  marginTop: '30px',
+  gap: '20px'
+};
+
+const actionStyle = {
+  cursor: 'pointer',
+};
+
+const linkStyle = {
+  textDecoration: 'none',
+  color: 'green',
+};
+
+export default Reports;

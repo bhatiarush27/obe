@@ -22,9 +22,12 @@ import AddCTDetails from "./components/components/AddCTDetails";
 import AddAssignmentMarks from "./components/components/AddAssignmentMarks";
 import AddCTMarks from "./components/components/AddCTMarks";
 import AddExitSurveyMarks from "./components/components/AddExitSurveyMarks";
-import Report from "./components/reports";
+import SubjectReportForm from "./components/reports/FinalReportSubjectForm";
+import Reports from "./components/reports";
 import SubjectFinalReport from "./components/reports/FinalReport";
 import Login from "./components/auth/Login";
+import SemesterFinalReport from './components/reports/SemesterFinalReport';
+import Home from './components/Home';
 
 import "./App.css";
 
@@ -33,24 +36,41 @@ const Layout = ({ children }) => {
 };
 
 const App = () => {
-  const [isLoggedOut, setIsLoggedOut] = useState(!(localStorage.getItem("loggedInUsername") || null));
+  const [isLoggedOut, setIsLoggedOut] = useState(
+    !(localStorage.getItem("loggedInUsername") || null)
+  );
 
   useEffect(() => {
-    setIsLoggedOut(!(localStorage.getItem('loggedInUsername') || null))
-  }, [localStorage.getItem('loggedInUsername')])
+    setIsLoggedOut(!(localStorage.getItem("loggedInUsername") || null));
+  }, [localStorage.getItem("loggedInUsername")]);
 
   return (
     <Router>
       <Navbar />
       <Layout>
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route
-            path="/login"
-            element={<Login />}
+            path="/"
+            element={
+              isLoggedOut ? <Navigate to="/login" /> : <Home />
+            }
           />
           <Route
             path="/final-report"
-            element={isLoggedOut ? <Navigate to="/login" /> : <Report />}
+            element={
+              isLoggedOut ? <Navigate to="/login" /> : <SubjectReportForm />
+            }
+          />
+          <Route
+            path="/semester-report"
+            element={
+              isLoggedOut ? <Navigate to="/login" /> : <SemesterFinalReport />
+            }
+          />
+          <Route
+            path="/reports"
+            element={isLoggedOut ? <Navigate to="/login" /> : <Reports />}
           />
           <Route
             path="/final-subject-report/:subjectId"
@@ -87,11 +107,11 @@ const App = () => {
             element={isLoggedOut ? <Navigate to="/login" /> : <OutcomesView />}
           />
           <Route
-            path="/add-pso"
+            path="/program-specific-outcomes"
             element={isLoggedOut ? <Navigate to="/login" /> : <AddPSO />}
           />
           <Route
-            path="/add-po"
+            path="/program-outcomes"
             element={isLoggedOut ? <Navigate to="/login" /> : <AddPO />}
           />
           <Route

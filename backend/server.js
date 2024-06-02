@@ -269,6 +269,19 @@ app.put("/api/pos/:id", async (req, res) => {
   }
 });
 
+app.delete("/api/pos/:id", async (req, res) => {
+  try {
+    const po = await PO.findByIdAndDelete(req.params.id);
+    if (!po) {
+      return res.status(404).json({ error: "PO not found" });
+    }
+    res.json({ message: "PO deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting PO:", error);
+    res.status(500).json({ error: "Failed to delete PO" });
+  }
+});
+
 // PSOs Section-------------------------------------------------------------------------------------------------------
 const psoSchema = new mongoose.Schema({
   name: {
@@ -315,6 +328,20 @@ app.get("/api/psos/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch PSO" });
   }
 });
+
+app.delete("/api/psos/:id", async (req, res) => {
+  try {
+    const pso = await PSO.findByIdAndDelete(req.params.id);
+    if (!pso) {
+      return res.status(404).json({ error: "PSO not found" });
+    }
+    res.json({ message: "PSO deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting PSO:", error);
+    res.status(500).json({ error: "Failed to delete PSO" });
+  }
+});
+
 
 app.put("/api/psos/:id", async (req, res) => {
   try {
