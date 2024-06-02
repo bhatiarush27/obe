@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import permissions from "../utils/permissions";
+import userImage from '../user.png';
 
 const Navbar = () => {
   const [loggedInUser, setLoggedInUser] = useState({
@@ -47,7 +48,7 @@ const Navbar = () => {
               ) : null}
               {userPermissions.includes("subjectActions") ? (
                 <li style={navItemStyle}>
-                  <Link to="/subjects" style={navLinkStyle}>
+                  <Link to="/subject-list" style={navLinkStyle}>
                     Subjects
                   </Link>
                 </li>
@@ -75,14 +76,15 @@ const Navbar = () => {
               ) : null}
             </>
           )}
+        </ul>
+        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px'}}>
+          <img src={userImage} style={{width: '40px', height: '40px', borderRadius: '20px'}} alt="" />
           {loggedInUser ? (
-            <li style={navItemStyle}>
               <button onClick={handleLogout} style={logoutButtonStyle}>
                 Logout
               </button>
-            </li>
           ) : null}
-        </ul>
+        </div>
       </div>
     </nav>
   );
@@ -98,7 +100,7 @@ const containerStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  maxWidth: "1000px",
+  maxWidth: "90%",
   margin: "0 auto",
 };
 
@@ -128,8 +130,10 @@ const logoutButtonStyle = {
   border: "none",
   color: "white",
   fontWeight: "bold",
-  backgroundColor: "red",
-  height: "20px",
+  backgroundColor: "#ff6242",
+  borderRadius: '10px',
+  height: "30px",
+  width: '80px',
   cursor: "pointer",
 };
 

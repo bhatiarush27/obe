@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const containerStyle = {
@@ -94,19 +95,41 @@ function EditSubject() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState("");
 
+  console.log('arush1111', subjectDetails)
+
+  const location = useLocation();
+
+  const getQueryParams = (query) => {
+    return new URLSearchParams(query);
+  };
+
+  const queryParams = getQueryParams(location.search);
+  const session = queryParams.get("session");
+  const subjectId = queryParams.get("subjectId");
+
+  useEffect(() => {
+    const fetchSubjectDetails = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5001/api/v2/subject?session=${session}&subjectId=${subjectId}`
+        );
+        console.log('response', response.data)
+        setSubjectDetails(response.data);
+        setSelectedSubject(subjectId);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+    fetchSubjectDetails();
+  }, [session, subjectId]);
+
+  console.log("arushSele", subjectDetails);
+
   useState(() => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get("http://localhost:5001/api/users");
         setUsers(response.data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-    const fetchSubjects = async () => {
-      try {
-        const response = await axios.get("http://localhost:5001/api/subjects");
-        setSubjects(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -123,26 +146,21 @@ function EditSubject() {
       }
     };
 
-    fetchSubjects();
     fetchUsers();
     fetchData();
   }, []);
 
   const handleChange = (index, field, value, type) => {
-    // Perform validation
-    if (field === 'level' && value.trim() === '') {
-      // If the field is 'level' and the value is empty, return without updating the state
+    if (field === "level" && value.trim() === "") {
       return;
     }
-  
+
     const updatedArray = [...subjectDetails[type]];
     updatedArray[index][field] = value;
     setSubjectDetails((prev) => ({ ...prev, [type]: updatedArray }));
   };
-  
 
   const addComponent = (type) => {
-    // Add a new CO or PO component
     const newComponent =
       type === "cos"
         ? {
@@ -152,7 +170,6 @@ function EditSubject() {
           }
         : { poCode: `CO${subjectDetails.pos.length + 1}`, description: "" };
 
-    // Generate labels for CO-PO and CO-PSO mappings
     const coPoMappingLabels = Array(POs.length)
       .fill("")
       .map((_, index) => `CO${subjectDetails.cos.length + 1}-PO${index + 1}`);
@@ -160,7 +177,6 @@ function EditSubject() {
       .fill("")
       .map((_, index) => `CO${subjectDetails.cos.length + 1}-PSO${index + 1}`);
 
-    // Update the subjectDetails state
     setSubjectDetails((prev) => ({
       ...prev,
       [type]: [...prev[type], newComponent],
@@ -231,29 +247,17 @@ function EditSubject() {
     setIsLoading(false);
   };
 
-  const handleSubjectSelect = (subjectId) => {
-    const selectedSubjectData = subjects.find(
-      (subject) => subject._id === subjectId
-    );
-    setSelectedSubject(subjectId);
-    setSubjectDetails(selectedSubjectData);
-  };
+  // const handleSubjectSelect = (subjectId) => {
+  //   const selectedSubjectData = subjects.find(
+  //     (subject) => subject._id === subjectId
+  //   );
+  //   setSelectedSubject(subjectId);
+  //   setSubjectDetails(selectedSubjectData);
+  // };
 
   return (
     <div style={containerStyle}>
       <h2>Edit Subject</h2>
-      <select
-        value={selectedSubject.name}
-        onChange={(e) => handleSubjectSelect(e.target.value)}
-        style={selectStyle}
-      >
-        <option value="">Select Subject</option>
-        {subjects.map((subject) => (
-          <option key={subject._id} value={subject._id}>
-            {subject.name}
-          </option>
-        ))}
-      </select>
       {selectedSubject ? (
         <form onSubmit={handleSubmit}>
           <div style={formGroupStyle}>
@@ -293,7 +297,7 @@ function EditSubject() {
                   assignedFaculty: e.target.value,
                 }));
               }}
-              style={inputStyle}
+              style={selectStyle}
               required
             >
               <option value="">Select Faculty</option>
@@ -365,100 +369,92 @@ function EditSubject() {
               Add CO
             </button>
           </div>
-          {
-            <div style={containerBorderStyle}>
-              <h3>CO-PO Mapping</h3>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: `${POs.length}`,
-                }}
-              >
-                {subjectDetails.coPoMapping.map((row, rowIndex) => (
-                  <div
-                    style={{ display: "flex", width: "80%", margin: "0 auto" }}
-                    key={rowIndex}
-                  >
-                    {row.map((cell, colIndex) => (
-                      <div
-                        key={`${rowIndex}-${colIndex}`}
-                        style={formGroupStyle}
-                      >
-                        <label>{cell.label}</label>
-                        <select
-                          value={
-                            subjectDetails.coPoMapping[rowIndex][colIndex].value
-                          }
-                          onChange={(e) =>
-                            handleChangeCoPoMapping(
-                              rowIndex,
-                              colIndex,
-                              +e.target.value
-                            )
-                          }
-                          style={inputStyle}
-                        >
-                          {[0, 1, 2, 3].map((value) => (
-                            <option key={value} value={value}>
-                              {value}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          }
 
-          {
-            <div style={containerBorderStyle}>
-              <h3>CO-PSO Mapping</h3>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: `${PSOs.length}`,
-                }}
-              >
-                {subjectDetails.coPsoMapping.map((row, rowIndex) => (
-                  <div
-                    style={{ display: "flex", width: "80%", margin: "0 auto" }}
-                    key={rowIndex}
-                  >
-                    {row?.map((cell, colIndex) => (
-                      <div
-                        key={`${rowIndex}-${colIndex}`}
-                        style={formGroupStyle}
+          <div style={containerBorderStyle}>
+            <h3>CO-PO Mapping</h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${POs.length})`,
+              }}
+            >
+              {subjectDetails.coPoMapping.map((row, rowIndex) => (
+                <div
+                  style={{ display: "flex", width: "80%", margin: "0 auto" }}
+                  key={rowIndex}
+                >
+                  {row.map((cell, colIndex) => (
+                    <div key={`${rowIndex}-${colIndex}`} style={formGroupStyle} padding={`${colIndex * 50}px`}>
+                      <label>{cell.label}</label>
+                      <select
+                        value={
+                          subjectDetails.coPoMapping[rowIndex][colIndex].value
+                        }
+                        onChange={(e) =>
+                          handleChangeCoPoMapping(
+                            rowIndex,
+                            colIndex,
+                            +e.target.value
+                          )
+                        }
+                        style={inputStyle}
                       >
-                        <label>{cell.label}</label>
-                        <select
-                          value={
-                            subjectDetails.coPsoMapping[rowIndex][colIndex]
-                              .value
-                          }
-                          onChange={(e) =>
-                            handleChangeCoPsoMapping(
-                              rowIndex,
-                              colIndex,
-                              +e.target.value
-                            )
-                          }
-                          style={inputStyle}
-                        >
-                          {[0, 1, 2, 3].map((value) => (
-                            <option key={value} value={value}>
-                              {value}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
+                        {[0, 1, 2, 3].map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
-          }
+          </div>
+
+          <div style={containerBorderStyle}>
+            <h3>CO-PSO Mapping</h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${PSOs.length})`,
+                gap: "10px",
+              }}
+            >
+              {subjectDetails.coPsoMapping.map((row, rowIndex) => (
+                <div
+                  style={{ display: "flex", width: "80%", margin: "0 auto" }}
+                  key={rowIndex}
+                >
+                  {row?.map((cell, colIndex) => (
+                    <div key={`${rowIndex}-${colIndex}`} style={formGroupStyle}>
+                      <label>{cell.label}</label>
+                      <select
+                        value={
+                          subjectDetails.coPsoMapping[rowIndex][colIndex].value
+                        }
+                        onChange={(e) =>
+                          handleChangeCoPsoMapping(
+                            rowIndex,
+                            colIndex,
+                            +e.target.value
+                          )
+                        }
+                        style={inputStyle}
+                      >
+                        {[0, 1, 2, 3].map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
           <button
             type="submit"
             style={isLoading ? disabledButtonStyle : buttonStyle}

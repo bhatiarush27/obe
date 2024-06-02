@@ -28,6 +28,7 @@ import SubjectFinalReport from "./components/reports/FinalReport";
 import Login from "./components/auth/Login";
 import SemesterFinalReport from './components/reports/SemesterFinalReport';
 import Home from './components/Home';
+import SubjectsList from './components/subjects/SubjectsList';
 
 import "./App.css";
 
@@ -121,6 +122,10 @@ const App = () => {
           <Route
             path="/subjects"
             element={isLoggedOut ? <Navigate to="/login" /> : <Subjects />}
+          />
+          <Route
+            path="/subject-list"
+            element={isLoggedOut ? <Navigate to="/login" /> : <SubjectsList />}
           />
           <Route
             path="/add-subject"

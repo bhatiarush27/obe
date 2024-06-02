@@ -105,6 +105,14 @@ const subjectSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  session: {
+    type: String,
+    required: true,
+  },
+  semester: {
+    type: String,
+    required: true,
+  },
   cos: [
     {
       coCode: {
@@ -185,6 +193,26 @@ app.get("/api/subjects", async (req, res) => {
   try {
     const subjects = await Subject.find();
     res.json(subjects);
+  } catch (error) {
+    console.error("Error fetching subjects:", error);
+    res.status(500).json({ error: "Failed to fetch subjects" });
+  }
+});
+
+app.get("/api/v2/subjects", async (req, res) => {
+  try {
+    const subjects = await Subject.find({session: req.query.session, semester: req.query.semester});
+    res.json(subjects);
+  } catch (error) {
+    console.error("Error fetching subjects:", error);
+    res.status(500).json({ error: "Failed to fetch subjects" });
+  }
+});
+
+app.get("/api/v2/subject", async (req, res) => {
+  try {
+    const subject = await Subject.findOne({session: req.query.session, _id: req.query.subjectId});
+    res.json(subject);
   } catch (error) {
     console.error("Error fetching subjects:", error);
     res.status(500).json({ error: "Failed to fetch subjects" });
