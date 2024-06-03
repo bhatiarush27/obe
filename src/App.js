@@ -25,10 +25,13 @@ import AddExitSurveyMarks from "./components/components/AddExitSurveyMarks";
 import SubjectReportForm from "./components/reports/FinalReportSubjectForm";
 import Reports from "./components/reports";
 import SubjectFinalReport from "./components/reports/FinalReport";
+import SemesterReportForm from "./components/reports/FinalReportSemesterForm";
 import Login from "./components/auth/Login";
-import SemesterFinalReport from './components/reports/SemesterFinalReport';
-import Home from './components/Home';
-import SubjectsList from './components/subjects/SubjectsList';
+import SemesterFinalReport from "./components/reports/SemesterFinalReport";
+import Home from "./components/Home";
+import SubjectsList from "./components/subjects/SubjectsList";
+
+import permissions from "./utils/permissions";
 
 import "./App.css";
 
@@ -37,25 +40,32 @@ const Layout = ({ children }) => {
 };
 
 const App = () => {
-  const [isLoggedOut, setIsLoggedOut] = useState(
-    !(localStorage.getItem("loggedInUsername") || null)
-  );
+  const [loggedInUser, setLoggedInUser] = useState({
+    name: localStorage.getItem("loggedInUsername") || null,
+    level: localStorage.getItem("loggedInUserLevel") || null,
+  });
+  const isLoggedOut = !loggedInUser.level;
+
+  console.log("isLog", isLoggedOut, loggedInUser.level);
+
+  const userPermissions = permissions[loggedInUser.level] || [];
 
   useEffect(() => {
-    setIsLoggedOut(!(localStorage.getItem("loggedInUsername") || null));
+    setLoggedInUser({
+      name: localStorage.getItem("loggedInUsername") || null,
+      level: localStorage.getItem("loggedInUserLevel") || null,
+    });
   }, [localStorage.getItem("loggedInUsername")]);
 
   return (
     <Router>
-      <Navbar />
+      <Navbar permissions={userPermissions} />
       <Layout>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
             path="/"
-            element={
-              isLoggedOut ? <Navigate to="/login" /> : <Home />
-            }
+            element={isLoggedOut ? <Navigate to="/login" /> : <Home />}
           />
           <Route
             path="/final-report"
@@ -64,7 +74,13 @@ const App = () => {
             }
           />
           <Route
-            path="/semester-report"
+            path="/final-report-semester"
+            element={
+              isLoggedOut ? <Navigate to="/login" /> : <SemesterReportForm />
+            }
+          />
+          <Route
+            path="/final-report-semester/report"
             element={
               isLoggedOut ? <Navigate to="/login" /> : <SemesterFinalReport />
             }
@@ -125,7 +141,7 @@ const App = () => {
           />
           <Route
             path="/subject-list"
-            element={isLoggedOut ? <Navigate to="/login" /> : <SubjectsList />}
+            element={isLoggedOut ? <Navigate to="/login" /> : <SubjectsList permissions={userPermissions} />}
           />
           <Route
             path="/add-subject"
@@ -137,20 +153,25 @@ const App = () => {
           />
           <Route
             path="/users"
-            element={isLoggedOut ? <Navigate to="/login" /> : <Users />}
+            element={
+              isLoggedOut ? (
+                <Navigate to="/login" />
+              ) :
+                <UsersView permissions={userPermissions} />
+            }
           />
-          <Route
+          {/* <Route
             path="/add-user"
             element={isLoggedOut ? <Navigate to="/login" /> : <AddUser />}
-          />
-          <Route
+          /> */}
+          {/* <Route
             path="/user"
             element={isLoggedOut ? <Navigate to="/login" /> : <UsersView />}
-          />
-          <Route
+          /> */}
+          {/* <Route
             path="/edit-user"
             element={isLoggedOut ? <Navigate to="/login" /> : <EditUser />}
-          />
+          /> */}
         </Routes>
       </Layout>
       {/* <Layout>

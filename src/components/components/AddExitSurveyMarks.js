@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Semesters, Sessions } from "../../constants";
 import axios from "axios";
 
 const containerStyle = {
@@ -47,24 +48,32 @@ const AddExitSurveyMarks = () => {
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedSubjectDetails, setSelectedSubjectDetails] = useState({});
   const [enrollmentNumber, setEnrollmentNumber] = useState("");
+  const [selectedSession, setSelectedSession] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [marks, setMarks] = useState([]);
   const [file, setFile] = useState();
 
   const fileReader = new FileReader();
 
   useEffect(() => {
+    if(!selectedSemester || !selectedSession) return;
+    setSelectedSubject('');
     const fetchSubjects = async () => {
       try {
-        const response = await axios.get("http://localhost:5001/api/subjects");
+        const response = await axios.get(
+          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}`
+        );
         setSubjects(response.data);
       } catch (error) {
         console.error("Error fetching subjects:", error);
       }
     };
     fetchSubjects();
-  }, []);
+  }, [selectedSemester, selectedSession]);
 
   useEffect(() => {
+    setSelectedSubjectDetails({})
+    setMarks([])
     if (selectedSubject) {
       const selectedSubDetails = subjects?.find(
         (sub) => sub._id === selectedSubject
@@ -82,7 +91,7 @@ const AddExitSurveyMarks = () => {
     }
     const newData = {
       enrollmentNumber: +enrollmentNumber,
-      marks
+      marks,
     };
 
     const updatedFormData = [...formData, newData];
@@ -100,46 +109,41 @@ const AddExitSurveyMarks = () => {
 
   const handleSubmit = async () => {
     try {
-      for(let j=0;j<formData.length;j++) {
+      for (let j = 0; j < formData.length; j++) {
         for (let i = 0; i < formData[j].marks?.length; i++) {
-            if (formData[j].marks[i] > 5 || formData[j].marks[i] < 0) {
-              alert("Inconsistent data!");
-              return;
-            }
+          if (formData[j].marks[i] > 5 || formData[j].marks[i] < 0) {
+            alert("Inconsistent data!");
+            return;
           }
+        }
       }
       const data = {
         componentId: `ces-${selectedSubject}`,
         subjectId: selectedSubject,
-        componentName: 'ces',
+        semester: "4th",
+        session: "2023-2024",
+        componentName: "ces",
         results: formData.map((data, index) => ({
-            enrollmentNumber: data.enrollmentNumber,
-            totalMarks: 25,
-            marks: data.marks.map((mark, ind) => ({
-                question: selectedSubjectDetails.cos[ind].coCode,
-                maxMarks: 5,
-                attempted: true,
-                obtainedMarks: mark
-            }))
+          enrollmentNumber: data.enrollmentNumber,
+          totalMarks: 25,
+          marks: data.marks.map((mark, ind) => ({
+            question: selectedSubjectDetails.cos[ind].coCode,
+            maxMarks: 5,
+            attempted: true,
+            obtainedMarks: mark,
+          })),
         })),
       };
       const response = await axios.get(
-        `http://localhost:5001/api/results/${data.componentId}`
+        `http://localhost:5001/api/v2/results/${data.componentId}`
       );
 
       if (response.data) {
-        const confirmUpdate = window.confirm(
+        const confirmUpdate = alert(
           "An entry with the provided componentId already exists. Do you want to update it?"
         );
-
-        if (confirmUpdate) {
-          await axios.put("http://localhost:5001/api/results/update", data);
-          alert("Result updated successfully!");
-        } else {
-          alert("Update cancelled by user.");
-        }
       } else {
-        await axios.post("http://localhost:5001/api/results", data);
+        await axios.post("http://localhost:5001/api/v2/results", data);
         alert("Result added successfully!");
       }
     } catch (error) {
@@ -158,9 +162,9 @@ const AddExitSurveyMarks = () => {
     const newData = csvRows?.map((row, index) => {
       const values = row.split(",");
       const enrollmentNumber = +values[0];
-      const marks = values.slice(1).map((mark, index) => (
-        mark !== "-" ? +mark || 0 : 0
-      ));
+      const marks = values
+        .slice(1)
+        .map((mark, index) => (mark !== "-" ? +mark || 0 : 0));
       return {
         enrollmentNumber,
         marks,
@@ -206,8 +210,35 @@ const AddExitSurveyMarks = () => {
 
   return (
     <div style={containerStyle}>
-      <h2>Add Component Result</h2>
-      <div>
+      <h2>Add Course Exit Survey Result</h2>
+
+      <select
+        value={selectedSession}
+        onChange={(e) => setSelectedSession(e.target.value)}
+        style={selectStyle}
+      >
+        <option value="">Select Session</option>
+        {Sessions.map((session) => (
+          <option key={session} value={session}>
+            {session}
+          </option>
+        ))}
+      </select>
+      <select
+        value={selectedSemester}
+        onChange={(e) => {
+          setSelectedSemester(e.target.value);
+        }}
+        style={selectStyle}
+      >
+        <option value="">Select Semester</option>
+        {Semesters.map((semester) => (
+          <option key={semester} value={semester}>
+            {semester}
+          </option>
+        ))}
+      </select>
+      {selectedSession && selectedSemester ? <div>
         <select
           id="subject"
           value={selectedSubject}
@@ -221,7 +252,7 @@ const AddExitSurveyMarks = () => {
             </option>
           ))}
         </select>
-      </div>
+      </div> : null}
       {selectedSubject && (
         <div>
           <h3>Add Indirect Attainment(Out of 5)</h3>

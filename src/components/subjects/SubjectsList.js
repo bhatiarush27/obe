@@ -85,7 +85,7 @@ const buttonStyle = {
   cursor: "pointer",
 };
 
-const SubjectList = () => {
+const SubjectList = ({permissions}) => {
   const [selectedSession, setSelectedSession] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("");
 

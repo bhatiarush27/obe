@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Semesters, Sessions } from "../../constants";
 
 const containerStyle = {
   // maxWidth: "400px",
@@ -70,21 +71,25 @@ const AddCTDetails = () => {
   const [selectedSubject, setSelectedSubject] = useState("");
   const [questions, setQuestions] = useState([]);
   const [selectedSubjectDetails, setSelectedSubjectDetails] = useState({});
+  const [selectedSession, setSelectedSession] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [selectedComponent, setSelectedComponent] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchSubjects = async () => {
+    if (!selectedSemester || !selectedSession) return;
+    const fetchSessionAndSemesterWiseSubjects = async () => {
       try {
-        const response = await axios.get("http://localhost:5001/api/subjects");
+        const response = await axios.get(
+          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}`
+        );
         setSubjects(response.data);
       } catch (error) {
         console.error("Error fetching subjects:", error);
       }
     };
-
-    fetchSubjects();
-  }, []);
+    fetchSessionAndSemesterWiseSubjects();
+  }, [selectedSemester, selectedSession]);
 
   useEffect(() => {
     const selectedSubDetails = subjects?.find(
@@ -94,7 +99,10 @@ const AddCTDetails = () => {
   }, [selectedSubject, subjects]);
 
   const addQuestion = () => {
-    setQuestions([...questions, { questionNumber: "", co: "", maxMarks: "", level: ""}]);
+    setQuestions([
+      ...questions,
+      { questionNumber: "", co: "", maxMarks: "", level: "" },
+    ]);
   };
 
   const removeQuestion = (index) => {
@@ -124,16 +132,19 @@ const AddCTDetails = () => {
       const componentData = {
         componentId: `${selectedComponent}-${selectedSubject}`,
         questions: updatedQuestions,
+        session: selectedSession,
         totalMarks,
         fields: questions.map((question) => question.questionNumber),
         componentName: selectedComponent,
-        subjectId: selectedSubject
+        subjectId: selectedSubject,
       };
       console.log("arush", componentData);
       await axios.post(`http://localhost:5001/api/components`, componentData);
       alert("Component details added successfully!");
       setSelectedComponent("");
       setSelectedSubject("");
+      setSelectedSession("");
+      setSelectedSession("");
       setQuestions([]);
     } catch (error) {
       alert("Error submitting component:");
@@ -145,19 +156,48 @@ const AddCTDetails = () => {
 
   return (
     <div style={containerStyle}>
-      <h2>Select Subject and Component to Add Details</h2>
+      <h2>Add CT's and SEE's question details </h2>
       <select
-        value={selectedSubject}
-        onChange={(e) => setSelectedSubject(e.target.value)}
+        value={selectedSession}
+        onChange={(e) => setSelectedSession(e.target.value)}
         style={selectStyle}
       >
-        <option value="">Select Subject</option>
-        {subjects.map((subject) => (
-          <option key={subject._id} value={subject._id}>
-            {subject.name}
+        <option value="">Select Session</option>
+        {Sessions.map((session) => (
+          <option key={session} value={session}>
+            {session}
           </option>
         ))}
       </select>
+      <select
+        value={selectedSemester}
+        onChange={(e) => {
+          setSelectedSemester(e.target.value);
+        }}
+        style={selectStyle}
+      >
+        <option value="">Select Semester</option>
+        {Semesters.map((semester) => (
+          <option key={semester} value={semester}>
+            {semester}
+          </option>
+        ))}
+      </select>
+
+      {selectedSemester && selectedSession ? (
+        <select
+          value={selectedSubject}
+          onChange={(e) => setSelectedSubject(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="">Select Subject</option>
+          {subjects.map((subject) => (
+            <option key={subject._id} value={subject._id}>
+              {subject.name}
+            </option>
+          ))}
+        </select>
+      ) : null}
       {selectedSubject && (
         <div>
           <select

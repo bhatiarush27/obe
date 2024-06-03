@@ -12,7 +12,7 @@ const Reports = () => {
           </Link>
         </div>
         <div style={actionStyle}>
-          <Link to="/semester-report" style={linkStyle}>
+          <Link to="/final-report-semester" style={linkStyle}>
             <span>View Semester report</span>
           </Link>
         </div>

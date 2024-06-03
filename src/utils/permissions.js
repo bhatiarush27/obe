@@ -1,13 +1,14 @@
 const permissions = {
   faculty: [
-    "userActions",
-    "subjectActions",
+    // "userActions",
+    // "subjectActions",
     "componentActions",
     "outcomeActions",
     "reportActions",
   ],
   admin: [
     "userActions",
+    "addUser",
     "subjectActions",
     "componentActions",
     "outcomeActions",
@@ -15,6 +16,7 @@ const permissions = {
   ],
   super_admin: [
     "userActions",
+    "addUser",
     "subjectActions",
     "componentActions",
     "outcomeActions",

@@ -8,21 +8,31 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
+import { useLocation } from "react-router-dom";
 import ReactHTMLTableToExcel from "react-html-table-to-excel";
 
 const SemesterFinalReport = () => {
   const [subjects, setSubjects] = useState([]);
   const [pos, setPOs] = useState([]);
   const [psos, setPSOs] = useState([]);
+  const location = useLocation();
 
   const [subjectArticulationDetails, setSubjectArticulationDetails] = useState(
     []
   );
 
+  const getQueryParams = (query) => {
+    return new URLSearchParams(query);
+  };
+
+  const queryParams = getQueryParams(location.search);
+  const session = queryParams.get("session");
+  const semester = queryParams.get("semester");
+
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await axios.get("http://localhost:5001/api/subjects");
+        const response = await axios.get(`http://localhost:5001/api/v2/subjects?session=${session}&semester=${semester}`);
         setSubjects(response.data);
         const response2 = await axios.get("http://localhost:5001/api/pos");
         setPOs(response2.data);

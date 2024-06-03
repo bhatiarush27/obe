@@ -13,7 +13,7 @@ import {
 import ReactHTMLTableToExcel from "react-html-table-to-excel";
 import "../../App.css";
 
-const FinalReport = () => {
+const FinalReportSubject = () => {
   const [ct1Details, setCT1Details] = React.useState();
   const [ct2Details, setCT2Details] = React.useState();
   const [seeDetails, setSEEDetails] = React.useState();
@@ -646,10 +646,10 @@ const FinalReport = () => {
                   )}
                 </TableCell>
                 <TableCell style={{ textAlign: "center" }}>
-                  {cesMarksTotal[i]}
+                  {cesMarksTotal[i].toFixed(2)}
                 </TableCell>
                 <TableCell style={{ textAlign: "center" }}>
-                  {getAttainmentLevelsCes(cesMarksTotal[i])}
+                  {getAttainmentLevelsCes(cesMarksTotal[i]).toFixed(2)}
                 </TableCell>
                 <TableCell style={{ textAlign: "center" }}>
                   {(
@@ -704,4 +704,4 @@ const FinalReport = () => {
   );
 };
 
-export default FinalReport;
+export default FinalReportSubject;

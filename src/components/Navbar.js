@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import permissions from "../utils/permissions";
-import userImage from '../user.png';
+import userImage from "../user.png";
 
-const Navbar = () => {
+const Navbar = ({ permissions }) => {
   const [loggedInUser, setLoggedInUser] = useState({
     name: localStorage.getItem("loggedInUsername") || null,
     level: localStorage.getItem("loggedInUserLevel") || null,
   });
   const navigate = useNavigate();
 
-  const userPermissions = permissions[loggedInUser.level] || [];
+  // const userPermissions = permissions[loggedInUser.level] || [];
 
   useEffect(() => {
     setLoggedInUser({
@@ -39,35 +38,31 @@ const Navbar = () => {
         <ul style={navLinksStyle}>
           {loggedInUser.name && (
             <>
-              {userPermissions.includes("userActions") ? (
-                <li style={navItemStyle}>
-                  <Link to="/users" style={navLinkStyle}>
-                    Users
-                  </Link>
-                </li>
-              ) : null}
-              {userPermissions.includes("subjectActions") ? (
-                <li style={navItemStyle}>
-                  <Link to="/subject-list" style={navLinkStyle}>
-                    Subjects
-                  </Link>
-                </li>
-              ) : null}
-              {userPermissions.includes("componentActions") ? (
+              <li style={navItemStyle}>
+                <Link to="/users" style={navLinkStyle}>
+                  Users
+                </Link>
+              </li>
+              <li style={navItemStyle}>
+                <Link to="/subject-list" style={navLinkStyle}>
+                  Subjects
+                </Link>
+              </li>
+              {permissions.includes("componentActions") ? (
                 <li style={navItemStyle}>
                   <Link to="/components" style={navLinkStyle}>
                     Components
                   </Link>
                 </li>
               ) : null}
-              {userPermissions.includes("outcomeActions") ? (
+              {permissions.includes("outcomeActions") ? (
                 <li style={navItemStyle}>
                   <Link to="/outcomes" style={navLinkStyle}>
                     Outcomes
                   </Link>
                 </li>
               ) : null}
-              {userPermissions.includes("reportActions") ? (
+              {permissions.includes("reportActions") ? (
                 <li style={navItemStyle}>
                   <Link to="/reports" style={navLinkStyle}>
                     Reports
@@ -77,12 +72,23 @@ const Navbar = () => {
             </>
           )}
         </ul>
-        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px'}}>
-          <img src={userImage} style={{width: '40px', height: '40px', borderRadius: '20px'}} alt="" />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "20px",
+          }}
+        >
+          <img
+            src={userImage}
+            style={{ width: "40px", height: "40px", borderRadius: "20px" }}
+            alt=""
+          />
           {loggedInUser ? (
-              <button onClick={handleLogout} style={logoutButtonStyle}>
-                Logout
-              </button>
+            <button onClick={handleLogout} style={logoutButtonStyle}>
+              Logout
+            </button>
           ) : null}
         </div>
       </div>
@@ -131,9 +137,9 @@ const logoutButtonStyle = {
   color: "white",
   fontWeight: "bold",
   backgroundColor: "#ff6242",
-  borderRadius: '10px',
+  borderRadius: "10px",
   height: "30px",
-  width: '80px',
+  width: "80px",
   cursor: "pointer",
 };
 
