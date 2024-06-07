@@ -46,6 +46,13 @@ const userSchema = new mongoose.Schema({
   level: {
     type: String,
     required: true,
+  },
+  isActive: {
+    type: Boolean,
+    required: true,
+  },
+  department: {
+    type: String,
   }
 });
 
@@ -85,12 +92,38 @@ app.get("/api/users/:id", async (req, res) => {
 
 app.put("/api/users/:id", async (req, res) => {
   try {
-    const { name, username, email } = req.body;
-    await User.findByIdAndUpdate(req.params.id, { name, username, email });
+    await User.findByIdAndUpdate(req.params.id, req.body);
     res.status(204).send();
   } catch (error) {
     console.error("Error updating user:", error);
     res.status(500).json({ error: "Failed to update user" });
+  }
+});
+
+// app.put("/api/users/:id/archive", async (req, res) => {
+//   try {
+//     const userId = req.params.id;
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userId,
+//       { isActive: false },
+//       { new: true }
+//     );
+//     res.status(200).json(updatedUser);
+//   } catch (error) {
+//     res.status(500).json({ error: "Failed to archive user" });
+//   }
+// });
+
+app.delete("/api/users/:id", async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting User:", error);
+    res.status(500).json({ error: "Failed to delete User" });
   }
 });
 
@@ -104,6 +137,14 @@ const subjectSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+  },
+  session: {
+    type: String,
+    required: true,
+  },
+  semester: {
+    type: String,
+    required: true,
   },
   cos: [
     {
@@ -185,6 +226,36 @@ app.get("/api/subjects", async (req, res) => {
   try {
     const subjects = await Subject.find();
     res.json(subjects);
+  } catch (error) {
+    console.error("Error fetching subjects:", error);
+    res.status(500).json({ error: "Failed to fetch subjects" });
+  }
+});
+
+app.get("/api/v2/subjects", async (req, res) => {
+  try {
+    let subjectsFindObj = {
+      session: req.query.session,
+      semester: req.query.semester,
+    };
+    if (req.query.facultyId) {
+      subjectsFindObj.assignedFaculty = req.query.facultyId;
+    }
+    const subjects = await Subject.find(subjectsFindObj);
+    res.json(subjects);
+  } catch (error) {
+    console.error("Error fetching subjects:", error);
+    res.status(500).json({ error: "Failed to fetch subjects" });
+  }
+});
+
+app.get("/api/v2/subject", async (req, res) => {
+  try {
+    const subject = await Subject.findOne({
+      session: req.query.session,
+      _id: req.query.subjectId,
+    });
+    res.json(subject);
   } catch (error) {
     console.error("Error fetching subjects:", error);
     res.status(500).json({ error: "Failed to fetch subjects" });
@@ -342,7 +413,6 @@ app.delete("/api/psos/:id", async (req, res) => {
   }
 });
 
-
 app.put("/api/psos/:id", async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -359,6 +429,14 @@ const componentSchema = new mongoose.Schema({
   componentId: {
     type: String,
     unique: true,
+    required: true,
+  },
+  session: {
+    type: String,
+    required: true,
+  },
+  semester: {
+    type: String,
     required: true,
   },
   totalMarks: {
@@ -428,16 +506,19 @@ const Component = mongoose.model("components", componentSchema);
 //ROUTES FOR SUBJECTS
 app.post("/api/components", async (req, res) => {
   try {
-    const { componentId } = req.body;
+    const { componentId, session, semester } = req.body;
 
-    // Check if a component with the provided componentId exists
-    const existingComponent = await Component.findOne({ componentId });
+    const existingComponent = await Component.findOne({
+      componentId,
+      session,
+      semester,
+    });
 
     if (existingComponent) {
-      const updatedComponent = { ...req.body };
+      const updatedComponent = { ...req.body, semester, session };
       delete updatedComponent._id;
       const result = await Component.findOneAndUpdate(
-        { componentId },
+        { componentId, session: req.body.session, semester: req.body.semester },
         updatedComponent,
         { new: true }
       );
@@ -456,7 +537,6 @@ app.post("/api/components", async (req, res) => {
 
 app.get("/api/components/component/:componentId", async (req, res) => {
   try {
-    console.log("arush", req.params.componentId);
     const component = await Component.findOne({
       componentId: req.params.componentId,
     });
@@ -464,6 +544,21 @@ app.get("/api/components/component/:componentId", async (req, res) => {
   } catch (error) {
     console.error("Error fetching Component:", error);
     res.status(500).json({ error: "Failed to fetch Component" });
+  }
+});
+
+app.get(`/api/v2/components/:subjectId`, async (req, res) => {
+  try {
+    console.log("id", req.params.subjectId);
+    const components = await Component.find({
+      subjectId: req.params.subjectId,
+      semester: req.query.semester,
+      session: req.query.session,
+    });
+    res.json(components);
+  } catch (error) {
+    console.error("Error fetching Components:", error);
+    res.status(500).json({ error: "Failed to fetch Components" });
   }
 });
 
@@ -491,6 +586,14 @@ const resultSchema = new mongoose.Schema({
     required: true,
   },
   componentName: {
+    type: String,
+    required: true,
+  },
+  session: {
+    type: String,
+    required: true,
+  },
+  semester: {
     type: String,
     required: true,
   },
@@ -549,24 +652,35 @@ app.get("/api/results/:componentId", async (req, res) => {
   }
 });
 
-app.post("/api/results", async (req, res) => {
+app.get("/api/v2/results/:componentId", async (req, res) => {
   try {
-    const newResult = new Result({ ...req.body });
-    await newResult.save();
-    res.status(201).json({ success: true, newResult });
+    const component = await Result.findOne({
+      componentId: req.params.componentId,
+      semester: req.query.semester,
+      session: req.query.session,
+    });
+    res.json(component);
   } catch (error) {
-    console.error("Error creating Result:", error);
-    res.status(500).json({ error: "Failed to create Result" });
+    console.error("Error fetching Component result:", error);
   }
 });
 
-app.put("/api/results/update", async (req, res) => {
+app.post("/api/v2/results", async (req, res) => {
   try {
-    const { componentId, ...resultData } = req.body;
-    const existingResult = await Result.findOne({ componentId });
-    existingResult.set(resultData);
-    await existingResult.save();
-    res.status(200).json({ success: true, updatedResult: existingResult });
+    const newResult = new Result({ ...req.body });
+    await newResult.save();
+    res.status(201).json(newResult);
+  } catch (error) {
+    console.error("Error adding result:", error);
+    res.status(500).json({ error: "Failed to add result" });
+  }
+});
+
+app.put("/api/v2/results", async (req, res) => {
+  try {
+    const { componentId, session } = req.body;
+    await Result.findByIdAndUpdate({ componentId, session }, { ...req.body });
+    res.status(204).send();
   } catch (error) {
     console.error("Error updating Result:", error);
     res.status(500).json({ error: "Failed to update Result" });

@@ -7,9 +7,9 @@ const Users = () => {
       <h2>Subjects Actions</h2>
       <div style={actionContainerStyle}>
         <div style={actionStyle}>
-          <Link to="/subjects" style={linkStyle}>
+          <Link to="/subject-list" style={linkStyle}>
             {/* <img src="/images/view-users-icon.png" alt="View Users" style={iconStyle} /> */}
-            <span>View all Subject list</span>
+            <span>View Subject list</span>
           </Link>
         </div>
         <div style={actionStyle}>

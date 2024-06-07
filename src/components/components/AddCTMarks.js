@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Semesters, Sessions } from "../../constants";
 
 const containerStyle = {
   // maxWidth: "400px",
@@ -51,45 +52,54 @@ const AddCTMarks = () => {
   const [marks, setMarks] = useState([]);
   const [enrollmentNumber, setEnrollmentNumber] = useState("");
   const [currentComponent, setCurrentComponent] = useState({});
+  const [selectedSession, setSelectedSession] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [file, setFile] = useState();
-  const [array, setArray] = useState([]);
+  // const [array, setArray] = useState([]);
 
   const fileReader = new FileReader();
 
+  const facultyId = localStorage.getItem('loggedInUserId') || '';
+
   useEffect(() => {
-    const fetchSubjects = async () => {
+    if (!selectedSemester || !selectedSession) return;
+    setSelectedSubject('');
+    setFormData([]);
+    const fetchSessionAndSemesterWiseSubjects = async () => {
       try {
-        const response = await axios.get("http://localhost:5001/api/subjects");
+        const response = await axios.get(
+          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}&facultyId=${facultyId}`
+        );
         setSubjects(response.data);
       } catch (error) {
         console.error("Error fetching subjects:", error);
       }
     };
-
-    fetchSubjects();
-  }, []);
+    fetchSessionAndSemesterWiseSubjects();
+  }, [selectedSemester, selectedSession]);
 
   useEffect(() => {
     const fetchComponents = async () => {
+      setSelectedComponent('');
       if (selectedSubject) {
         try {
-          const subjectId = selectedSubject;
-          const response = await axios.get(
-            `http://localhost:5001/api/components/subject-wise/${subjectId}`
-          );
           const selectedSubDetails = subjects?.find(
             (sub) => sub._id === selectedSubject
           );
-          setComponents(response.data);
           setSelectedSubjectDetails(selectedSubDetails);
+          const subjectId = selectedSubject;
+          const response = await axios.get(
+            `http://localhost:5001/api/v2/components/${subjectId}?session=${selectedSession}&semester=${selectedSemester}`
+          );
+          setComponents(response.data);
         } catch (error) {
           console.error("Error fetching components:", error);
         }
       }
     };
-
     fetchComponents();
-  }, [selectedSubject, subjects]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSubject]);
 
   useEffect(() => {
     const fetchComponent = async () => {
@@ -110,7 +120,6 @@ const AddCTMarks = () => {
   }, [selectedSubject, selectedComponent]);
 
   const handleAddData = () => {
-    // Create an object with the entered data and add it to the formData state
     if (!enrollmentNumber) {
       alert("Add enrollment number.");
       return;
@@ -133,14 +142,11 @@ const AddCTMarks = () => {
         attempted: !(mark === "-"),
         obtainedMarks: mark !== "-" ? +mark || 0 : 0,
       })),
-      totalMarks: marks.reduce(
-        (total, mark) => {
-          console.log('arushu', mark)
-          const marks = mark !== '-' ? (+mark || 0) : 0;
-          return total + marks;
-        },
-        0
-      ),
+      totalMarks: marks.reduce((total, mark) => {
+        console.log("arushu", mark);
+        const marks = mark !== "-" ? +mark || 0 : 0;
+        return total + marks;
+      }, 0),
     };
 
     const updatedFormData = [...formData, newData].sort(
@@ -164,25 +170,27 @@ const AddCTMarks = () => {
         componentId: `${currentComponent.componentName}-${selectedSubject}`,
         subjectId: selectedSubject,
         componentName: currentComponent.componentName,
+        session: selectedSession,
+        semester: selectedSemester,
         results: formData,
       };
       const response = await axios.get(
-        `http://localhost:5001/api/results/${data.componentId}`
+        `http://localhost:5001/api/v2/results/${data.componentId}?session=${selectedSession}&semester=${selectedSemester}`
       );
 
       if (response.data) {
-        const confirmUpdate = window.confirm(
-          "An entry with the provided componentId already exists. Do you want to update it?"
+        const confirmUpdate = alert(
+          "An entry with the provided componentId already exists"
         );
 
-        if (confirmUpdate) {
-          await axios.put("http://localhost:5001/api/results/update", data);
-          alert("Result updated successfully!");
-        } else {
-          alert("Update cancelled by user.");
-        }
+        // if (confirmUpdate) {
+        //   await axios.put("http://localhost:5001/api/v2/results", data);
+        //   alert("Result updated successfully!");
+        // } else {
+        //   alert("Update cancelled by user.");
+        // }
       } else {
-        await axios.post("http://localhost:5001/api/results", data);
+        await axios.post("http://localhost:5001/api/v2/results", data);
         alert("Result added successfully!");
       }
     } catch (error) {
@@ -195,21 +203,20 @@ const AddCTMarks = () => {
     setFile(e.target.files[0]);
   };
 
-  console.log("arush2", formData);
-
   const csvFileToArray = (string) => {
     const csvRows = string.slice(string.indexOf("\n") + 1).split("\n");
 
     const newData = csvRows?.map((row, index) => {
       const values = row.split(",");
       const enrollmentNumber = +values[0];
-      console.log("arush4", values);
+
       const marks = values.slice(1).map((mark, index) => ({
         question: currentComponent?.questions[index]?.questionNumber,
         maxMarks: currentComponent?.questions[index]?.maxMarks,
         attempted: !(mark === "-"),
         obtainedMarks: mark !== "-" ? +mark || 0 : 0,
       }));
+
       return {
         enrollmentNumber,
         marks,
@@ -219,6 +226,26 @@ const AddCTMarks = () => {
         ),
       };
     });
+
+    console.log('arushtest', newData, currentComponent)
+
+    let error = false;
+    newData.forEach((dataRow) => {
+      dataRow.marks.forEach((mark, i) => {
+        if(mark.obtainedMarks > currentComponent.questions[i].maxMarks) {
+          alert(
+            `Inconsistent data found for enrollment number - ${dataRow.enrollmentNumber}`
+          );
+          error = true;
+          return;
+        }
+      })
+    })
+
+    if(error) {
+      error = false;
+      return;
+    }
 
     const existingEnrollmentNumbers = formData.map(
       (data) => data.enrollmentNumber
@@ -262,18 +289,46 @@ const AddCTMarks = () => {
       <h2>Add Component Result</h2>
       <div>
         <select
-          id="subject"
-          value={selectedSubject}
-          onChange={(e) => setSelectedSubject(e.target.value)}
+          value={selectedSession}
+          onChange={(e) => setSelectedSession(e.target.value)}
           style={selectStyle}
         >
-          <option value="">Select Subject</option>
-          {subjects?.map((subject) => (
-            <option key={subject._id} value={subject._id}>
-              {subject.name}
+          <option value="">Select Session</option>
+          {Sessions.map((session) => (
+            <option key={session} value={session}>
+              {session}
             </option>
           ))}
         </select>
+        <select
+          value={selectedSemester}
+          onChange={(e) => {
+            setSelectedSemester(e.target.value);
+          }}
+          style={selectStyle}
+        >
+          <option value="">Select Semester</option>
+          {Semesters.map((semester) => (
+            <option key={semester} value={semester}>
+              {semester}
+            </option>
+          ))}
+        </select>
+        {selectedSemester && selectedSession ? (
+          <select
+            id="subject"
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="">Select Subject</option>
+            {subjects?.map((subject) => (
+              <option key={subject._id} value={subject._id}>
+                {subject.name}
+              </option>
+            ))}
+          </select>
+        ) : null}
       </div>
       {selectedSubject && (
         <div>

@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import permissions from "../utils/permissions";
+import userImage from "../user.png";
 
-const Navbar = () => {
+const Navbar = ({ permissions }) => {
   const [loggedInUser, setLoggedInUser] = useState({
     name: localStorage.getItem("loggedInUsername") || null,
     level: localStorage.getItem("loggedInUserLevel") || null,
   });
   const navigate = useNavigate();
 
-  const userPermissions = permissions[loggedInUser.level] || [];
+  // const userPermissions = permissions[loggedInUser.level] || [];
 
   useEffect(() => {
     setLoggedInUser({
@@ -25,9 +25,12 @@ const Navbar = () => {
       setLoggedInUser({});
       localStorage.removeItem("loggedInUsername");
       localStorage.removeItem("loggedInUserLevel");
+      localStorage.removeItem("loggedInUserId");
       navigate("/login");
     }
   };
+
+  console.log('arushsh', permissions)
 
   return (
     <nav style={navStyle}>
@@ -38,35 +41,31 @@ const Navbar = () => {
         <ul style={navLinksStyle}>
           {loggedInUser.name && (
             <>
-              {userPermissions.includes("userActions") ? (
-                <li style={navItemStyle}>
-                  <Link to="/users" style={navLinkStyle}>
-                    Users
-                  </Link>
-                </li>
-              ) : null}
-              {userPermissions.includes("subjectActions") ? (
-                <li style={navItemStyle}>
-                  <Link to="/subjects" style={navLinkStyle}>
-                    Subjects
-                  </Link>
-                </li>
-              ) : null}
-              {userPermissions.includes("componentActions") ? (
+              <li style={navItemStyle}>
+                <Link to="/users" style={navLinkStyle}>
+                  Users
+                </Link>
+              </li>
+              <li style={navItemStyle}>
+                <Link to="/subject-list" style={navLinkStyle}>
+                  Subjects
+                </Link>
+              </li>
+              {permissions.includes("componentActions") ? (
                 <li style={navItemStyle}>
                   <Link to="/components" style={navLinkStyle}>
                     Components
                   </Link>
                 </li>
               ) : null}
-              {userPermissions.includes("outcomeActions") ? (
+              {permissions.includes("outcomeActions") ? (
                 <li style={navItemStyle}>
                   <Link to="/outcomes" style={navLinkStyle}>
                     Outcomes
                   </Link>
                 </li>
               ) : null}
-              {userPermissions.includes("reportActions") ? (
+              {permissions.includes("reportActions") ? (
                 <li style={navItemStyle}>
                   <Link to="/reports" style={navLinkStyle}>
                     Reports
@@ -75,14 +74,26 @@ const Navbar = () => {
               ) : null}
             </>
           )}
-          {loggedInUser ? (
-            <li style={navItemStyle}>
-              <button onClick={handleLogout} style={logoutButtonStyle}>
-                Logout
-              </button>
-            </li>
-          ) : null}
         </ul>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "20px",
+          }}
+        >
+          <img
+            src={userImage}
+            style={{ width: "40px", height: "40px", borderRadius: "20px" }}
+            alt=""
+          />
+          {loggedInUser ? (
+            <button onClick={handleLogout} style={logoutButtonStyle}>
+              Logout
+            </button>
+          ) : null}
+        </div>
       </div>
     </nav>
   );
@@ -98,7 +109,7 @@ const containerStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  maxWidth: "1000px",
+  maxWidth: "90%",
   margin: "0 auto",
 };
 
@@ -128,8 +139,10 @@ const logoutButtonStyle = {
   border: "none",
   color: "white",
   fontWeight: "bold",
-  backgroundColor: "red",
-  height: "20px",
+  backgroundColor: "#ff6242",
+  borderRadius: "10px",
+  height: "30px",
+  width: "80px",
   cursor: "pointer",
 };
 

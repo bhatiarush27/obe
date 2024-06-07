@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Semesters, Sessions } from "../../constants";
-import axios from "axios";
 
 const containerStyle = {
   maxWidth: "400px",
@@ -40,39 +39,18 @@ const buttonStyle = {
   cursor: "pointer",
 };
 
-const SubjectReport = () => {
-  const [subjects, setSubjects] = useState([]);
-  const [selectedSubject, setSelectedSubject] = useState("");
+const SemesterReportForm = () => {
   const [selectedSession, setSelectedSession] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if(!selectedSemester || !selectedSession) return;
-    const fetchSubjects = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}`
-        );
-        setSubjects(response.data);
-      } catch (error) {
-        console.error("Error fetching subjects:", error);
-      }
-    };
-    fetchSubjects();
-  }, [selectedSemester, selectedSession]);
-
   const handleSubmit = () => {
-    if (selectedSubject) {
-      navigate(`/final-subject-report/${selectedSubject}`);
-    } else {
-      alert("Please select a subject.");
-    }
+      navigate(`/final-report-semester/report?session=${selectedSession}&semester=${selectedSemester}`);
   };
 
   return (
     <div style={containerStyle}>
-      <h2>Subject Report</h2>
+      <h2>Semester Report Form</h2>
       <select
         value={selectedSession}
         onChange={(e) => setSelectedSession(e.target.value)}
@@ -100,25 +78,12 @@ const SubjectReport = () => {
         ))}
       </select>
       {selectedSemester && selectedSession ? (
-        <select
-          id="subjectSelect"
-          value={selectedSubject}
-          onChange={(e) => setSelectedSubject(e.target.value)}
-          style={inputStyle}
-        >
-          <option value="">Select Subject</option>
-          {subjects.map((subject) => (
-            <option key={subject._id} value={subject._id}>
-              {subject.name}
-            </option>
-          ))}
-        </select>
+        <button onClick={handleSubmit} style={buttonStyle}>
+          Submit
+        </button>
       ) : null}
-      <button onClick={handleSubmit} style={buttonStyle}>
-        Submit
-      </button>
     </div>
   );
 };
 
-export default SubjectReport;
+export default SemesterReportForm;

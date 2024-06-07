@@ -32,6 +32,7 @@ const Login = () => {
       if (currentUser.length) {
         localStorage.setItem("loggedInUsername", currentUser[0].username);
         localStorage.setItem("loggedInUserLevel", currentUser[0].level);
+        localStorage.setItem("loggedInUserId", currentUser[0]._id);
         navigate("/");
       }
     } catch (e) {

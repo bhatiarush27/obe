@@ -73,6 +73,7 @@ function AddSubject() {
   const [subjectDetails, setSubjectDetails] = useState({
     name: "",
     code: "",
+    session: "",
     cos: [{ coCode: "CO1", level: "", description: "" }],
     coPoMapping: [],
     coPsoMapping: [],
@@ -199,6 +200,7 @@ function AddSubject() {
       setSubjectDetails({
         name: "",
         code: "",
+        session: "",
         cos: [{ coCode: "", level: "", description: "" }],
         coPoMapping: [],
         coPsoMapping: [],
@@ -241,6 +243,26 @@ function AddSubject() {
             style={inputStyle}
             required
           />
+        </div>
+        <div style={formGroupStyle}>
+          <select
+            value={subjectDetails.session}
+            onChange={(e) => {
+              setSubjectDetails((prev) => ({
+                ...prev,
+                session: e.target.value,
+              }));
+            }}
+            style={inputStyle}
+            required
+          >
+            <option value="">Select Session</option>
+            {['2022-2023','2023-2024'].map((session) => (
+              <option key={session} value={session}>
+                {session}
+              </option>
+            ))}
+          </select>
         </div>
         <div style={formGroupStyle}>
           <select
