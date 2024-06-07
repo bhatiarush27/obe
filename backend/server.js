@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 
 // Connect to MongoDB
 mongoose
-  .connect("mongodb+srv://arush:arush@obe-cluster.nglojid.mongodb.net/", {
+  .connect("mongodb://localhost:27017/obe", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
