@@ -76,12 +76,16 @@ const AddCTDetails = () => {
   const [selectedComponent, setSelectedComponent] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const facultyId = localStorage.getItem('loggedInUserId') || '';
+
+  console.log('arushhhhh', facultyId)
+
   useEffect(() => {
     if (!selectedSemester || !selectedSession) return;
     const fetchSessionAndSemesterWiseSubjects = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}`
+          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}&facultyId=${facultyId}`
         );
         setSubjects(response.data);
       } catch (error) {

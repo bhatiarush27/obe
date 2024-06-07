@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 
 // Connect to MongoDB
 mongoose
-  .connect("mongodb://localhost:27017/obe", {
+  .connect("mongodb+srv://arush:arush@obe-cluster.nglojid.mongodb.net/", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -47,6 +47,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isActive: {
+    type: Boolean,
+    required: true,
+  },
+  department: {
+    type: String,
+  }
 });
 
 const User = mongoose.model("users", userSchema);
@@ -85,14 +92,27 @@ app.get("/api/users/:id", async (req, res) => {
 
 app.put("/api/users/:id", async (req, res) => {
   try {
-    const { name, username, email } = req.body;
-    await User.findByIdAndUpdate(req.params.id, { name, username, email });
+    await User.findByIdAndUpdate(req.params.id, req.body);
     res.status(204).send();
   } catch (error) {
     console.error("Error updating user:", error);
     res.status(500).json({ error: "Failed to update user" });
   }
 });
+
+// app.put("/api/users/:id/archive", async (req, res) => {
+//   try {
+//     const userId = req.params.id;
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userId,
+//       { isActive: false },
+//       { new: true }
+//     );
+//     res.status(200).json(updatedUser);
+//   } catch (error) {
+//     res.status(500).json({ error: "Failed to archive user" });
+//   }
+// });
 
 app.delete("/api/users/:id", async (req, res) => {
   try {
@@ -214,10 +234,14 @@ app.get("/api/subjects", async (req, res) => {
 
 app.get("/api/v2/subjects", async (req, res) => {
   try {
-    const subjects = await Subject.find({
+    let subjectsFindObj = {
       session: req.query.session,
       semester: req.query.semester,
-    });
+    };
+    if (req.query.facultyId) {
+      subjectsFindObj.assignedFaculty = req.query.facultyId;
+    }
+    const subjects = await Subject.find(subjectsFindObj);
     res.json(subjects);
   } catch (error) {
     console.error("Error fetching subjects:", error);
@@ -655,7 +679,7 @@ app.post("/api/v2/results", async (req, res) => {
 app.put("/api/v2/results", async (req, res) => {
   try {
     const { componentId, session } = req.body;
-    await Result.findByIdAndUpdate({componentId, session}, {...req.body});
+    await Result.findByIdAndUpdate({ componentId, session }, { ...req.body });
     res.status(204).send();
   } catch (error) {
     console.error("Error updating Result:", error);

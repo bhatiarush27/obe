@@ -25,9 +25,12 @@ const Navbar = ({ permissions }) => {
       setLoggedInUser({});
       localStorage.removeItem("loggedInUsername");
       localStorage.removeItem("loggedInUserLevel");
+      localStorage.removeItem("loggedInUserId");
       navigate("/login");
     }
   };
+
+  console.log('arushsh', permissions)
 
   return (
     <nav style={navStyle}>

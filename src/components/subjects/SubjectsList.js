@@ -85,7 +85,7 @@ const buttonStyle = {
   cursor: "pointer",
 };
 
-const SubjectList = ({permissions}) => {
+const SubjectList = ({ permissions }) => {
   const [selectedSession, setSelectedSession] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("");
 
@@ -109,6 +109,8 @@ const SubjectList = ({permissions}) => {
   const [userDetails, setUserDetails] = useState({}); // State to store fetched users
 
   const navigate = useNavigate();
+
+  const facultyUsername = localStorage.getItem("loggedInUsername") || null;
 
   const handleChange = (field, value) => {
     setSubjectDetails((prev) => ({ ...prev, [field]: value }));
@@ -160,40 +162,40 @@ const SubjectList = ({permissions}) => {
     setModalTask("");
   };
 
-  const handleSubjectDelete = async (subject) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this subject?"
-    );
+  // const handleSubjectDelete = async (subject) => {
+  //   const confirmDelete = window.confirm(
+  //     "Are you sure you want to delete this subject?"
+  //   );
 
-    if (confirmDelete) {
-      try {
-        const response = await axios.delete(
-          `http://localhost:5001/api/subjects/${subject._id}`
-        );
-        if (response.status === 200) {
-          window.alert("Subject deleted successfully");
-          const response = await axios.get(
-            "http://localhost:5001/api/subjects"
-          );
-          setSubjects(response.data);
-        } else {
-          console.error("Failed to delete subject:", response.data.error);
-          window.alert("Failed to delete subject");
-        }
-      } catch (error) {
-        console.error("Error deleting subject:", error);
-        window.alert("Failed to delete subject");
-      }
-    }
-  };
+  //   if (confirmDelete) {
+  //     try {
+  //       const response = await axios.delete(
+  //         `http://localhost:5001/api/subjects/${subject._id}`
+  //       );
+  //       if (response.status === 200) {
+  //         window.alert("Subject deleted successfully");
+  //         const response = await axios.get(
+  //           "http://localhost:5001/api/subjects"
+  //         );
+  //         setSubjects(response.data);
+  //       } else {
+  //         console.error("Failed to delete subject:", response.data.error);
+  //         window.alert("Failed to delete subject");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error deleting subject:", error);
+  //       window.alert("Failed to delete subject");
+  //     }
+  //   }
+  // };
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get("http://localhost:5001/api/users");
         let userNameObj = {};
-        console.log('arush344', response.data)
-        response.data.forEach(resp => userNameObj[resp._id] = resp);
+        console.log("arush344", response.data);
+        response.data.forEach((resp) => (userNameObj[resp._id] = resp));
         setUserDetails(userNameObj);
         setUsers(response.data);
       } catch (error) {
@@ -205,7 +207,7 @@ const SubjectList = ({permissions}) => {
 
   useEffect(() => {
     setSubjects([]);
-    setError('')
+    setError("");
   }, [selectedSession, selectedSemester]);
 
   const fetchSubjects = async () => {
@@ -213,8 +215,10 @@ const SubjectList = ({permissions}) => {
       const response = await axios.get(
         `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}`
       );
-      if(response.data.length === 0) {
-        setError("Unable to fetch subjects associated with the selected semester and session.")
+      if (response.data.length === 0) {
+        setError(
+          "Unable to fetch subjects associated with the selected semester and session."
+        );
         return;
       }
       setSubjects(response.data);
@@ -223,7 +227,7 @@ const SubjectList = ({permissions}) => {
     }
   };
 
-  console.log('arush1212', userDetails)
+  console.log("arush1212", userDetails);
 
   return (
     <Container maxWidth="md">
@@ -264,7 +268,7 @@ const SubjectList = ({permissions}) => {
         </button>
       </div>
 
-<div style={{color: 'red'}}>{error}</div>
+      <div style={{ color: "red" }}>{error}</div>
 
       {subjects.length ? (
         <div
@@ -277,9 +281,9 @@ const SubjectList = ({permissions}) => {
           }}
         >
           <h3 style={{ textAlign: "center" }}>Subject List</h3>
-          <button style={buttonStyle} onClick={() => navigate("/add-subject")}>
+          {permissions.includes("subjectActionsAdd") ? <button style={buttonStyle} onClick={() => navigate("/add-subject")}>
             Add Subject
-          </button>
+          </button> : null}
         </div>
       ) : null}
 
@@ -299,13 +303,24 @@ const SubjectList = ({permissions}) => {
                 {subjects.map((subject) => (
                   <TableRow key={subject._id}>
                     <TableCell>{subject.name}</TableCell>
-                  <TableCell>{userDetails[subject.assignedFaculty].name}</TableCell>
+                    <TableCell>
+                      {userDetails[subject.assignedFaculty].name}
+                    </TableCell>
                     <TableCell>{subject.code}</TableCell>
                     <TableCell>
-                      <Button onClick={() => navigate(`/edit-subject?session=${selectedSession}&subjectId=${subject._id}`)}>
-                        Edit
-                      </Button>
-                      <Button
+                      {userDetails[subject.assignedFaculty].username ===
+                      facultyUsername ? (
+                        <Button
+                          onClick={() =>
+                            navigate(
+                              `/edit-subject?session=${selectedSession}&subjectId=${subject._id}`
+                            )
+                          }
+                        >
+                          Edit
+                        </Button>
+                      ) : null}
+                      {/* <Button
                         onClick={() => handleSubjectDelete(subject)}
                         style={{
                           backgroundColor: "red",
@@ -314,7 +329,7 @@ const SubjectList = ({permissions}) => {
                         }}
                       >
                         Delete
-                      </Button>
+                      </Button> */}
                     </TableCell>
                   </TableRow>
                 ))}

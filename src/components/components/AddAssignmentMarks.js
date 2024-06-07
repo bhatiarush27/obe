@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Semesters, Sessions } from "../../constants";
 import axios from "axios";
 
 const containerStyle = {
@@ -48,22 +49,29 @@ const AddAssignmentMarks = () => {
   const [enrollmentNumber, setEnrollmentNumber] = useState("");
   const [atMarks, setAtMarks] = useState("");
   const [taqMarks, setTaqMarks] = useState("");
+  const [selectedSession, setSelectedSession] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [file, setFile] = useState();
 
   const fileReader = new FileReader();
 
+  const facultyId = localStorage.getItem("loggedInUserId") || "";
+
   useEffect(() => {
+    if (!selectedSemester || !selectedSession) return;
+    setSelectedSubject("");
     const fetchSubjects = async () => {
       try {
-        const response = await axios.get("http://localhost:5001/api/subjects");
+        const response = await axios.get(
+          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}&facultyId=${facultyId}`
+        );
         setSubjects(response.data);
       } catch (error) {
         console.error("Error fetching subjects:", error);
       }
     };
-
     fetchSubjects();
-  }, []);
+  }, [selectedSemester, selectedSession, facultyId]);
 
   console.log("arush22", formData);
 
@@ -151,6 +159,22 @@ const AddAssignmentMarks = () => {
       return { enrollmentNumber, atMarks, taqMarks };
     });
 
+    let error = false;
+    newData.forEach((dataRow) => {
+      if (dataRow.atMarks > 10 || dataRow.taqMarks > 10) {
+        alert(
+          `Inconsistent marks data found for enrollment number - ${dataRow.enrollmentNumber}`
+        );
+        error = true;
+        return;
+      }
+    });
+
+    if (error) {
+      error = false;
+      return;
+    }
+
     const existingEnrollmentNumbers = formData.map(
       (data) => data.enrollmentNumber
     );
@@ -190,21 +214,49 @@ const AddAssignmentMarks = () => {
   return (
     <div style={containerStyle}>
       <h2>Add Assignment Marks</h2>
-      <div>
-        <select
-          id="subject"
-          value={selectedSubject}
-          onChange={(e) => setSelectedSubject(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="">Select Subject</option>
-          {subjects?.map((subject) => (
-            <option key={subject._id} value={subject._id}>
-              {subject.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <select
+        value={selectedSession}
+        onChange={(e) => setSelectedSession(e.target.value)}
+        style={selectStyle}
+      >
+        <option value="">Select Session</option>
+        {Sessions.map((session) => (
+          <option key={session} value={session}>
+            {session}
+          </option>
+        ))}
+      </select>
+      <select
+        value={selectedSemester}
+        onChange={(e) => {
+          setSelectedSemester(e.target.value);
+        }}
+        style={selectStyle}
+      >
+        <option value="">Select Semester</option>
+        {Semesters.map((semester) => (
+          <option key={semester} value={semester}>
+            {semester}
+          </option>
+        ))}
+      </select>
+      {selectedSession && selectedSemester ? (
+        <div>
+          <select
+            id="subject"
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="">Select Subject</option>
+            {subjects?.map((subject) => (
+              <option key={subject._id} value={subject._id}>
+                {subject.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
       {selectedSubject ? (
         <div
           style={{ border: "1px solid black", margin: "10px", padding: "10px" }}

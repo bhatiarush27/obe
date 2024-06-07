@@ -59,16 +59,7 @@ const AddCTMarks = () => {
 
   const fileReader = new FileReader();
 
-  // const fetchSessionAndSemesterWiseSubjects = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}`
-  //     );
-  //     setSubjects(response.data);
-  //   } catch (error) {
-  //     console.error("Error fetching subjects:", error);
-  //   }
-  // };
+  const facultyId = localStorage.getItem('loggedInUserId') || '';
 
   useEffect(() => {
     if (!selectedSemester || !selectedSession) return;
@@ -77,7 +68,7 @@ const AddCTMarks = () => {
     const fetchSessionAndSemesterWiseSubjects = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}`
+          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}&facultyId=${facultyId}`
         );
         setSubjects(response.data);
       } catch (error) {
@@ -218,13 +209,14 @@ const AddCTMarks = () => {
     const newData = csvRows?.map((row, index) => {
       const values = row.split(",");
       const enrollmentNumber = +values[0];
-      console.log("arush4", values);
+
       const marks = values.slice(1).map((mark, index) => ({
         question: currentComponent?.questions[index]?.questionNumber,
         maxMarks: currentComponent?.questions[index]?.maxMarks,
         attempted: !(mark === "-"),
         obtainedMarks: mark !== "-" ? +mark || 0 : 0,
       }));
+
       return {
         enrollmentNumber,
         marks,
@@ -234,6 +226,26 @@ const AddCTMarks = () => {
         ),
       };
     });
+
+    console.log('arushtest', newData, currentComponent)
+
+    let error = false;
+    newData.forEach((dataRow) => {
+      dataRow.marks.forEach((mark, i) => {
+        if(mark.obtainedMarks > currentComponent.questions[i].maxMarks) {
+          alert(
+            `Inconsistent data found for enrollment number - ${dataRow.enrollmentNumber}`
+          );
+          error = true;
+          return;
+        }
+      })
+    })
+
+    if(error) {
+      error = false;
+      return;
+    }
 
     const existingEnrollmentNumbers = formData.map(
       (data) => data.enrollmentNumber

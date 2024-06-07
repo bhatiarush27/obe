@@ -55,13 +55,15 @@ const AddExitSurveyMarks = () => {
 
   const fileReader = new FileReader();
 
+  const facultyId = localStorage.getItem('loggedInUserId') || '';
+
   useEffect(() => {
     if(!selectedSemester || !selectedSession) return;
     setSelectedSubject('');
     const fetchSubjects = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}`
+          `http://localhost:5001/api/v2/subjects?session=${selectedSession}&semester=${selectedSemester}&facultyId=${facultyId}`
         );
         setSubjects(response.data);
       } catch (error) {
@@ -69,7 +71,7 @@ const AddExitSurveyMarks = () => {
       }
     };
     fetchSubjects();
-  }, [selectedSemester, selectedSession]);
+  }, [selectedSemester, selectedSession, facultyId]);
 
   useEffect(() => {
     setSelectedSubjectDetails({})
@@ -170,6 +172,31 @@ const AddExitSurveyMarks = () => {
         marks,
       };
     });
+
+    for (let j = 0; j < newData.length; j++) {
+      for (let i = 0; i < newData[j].marks?.length; i++) {
+        if (formData[j].marks[i] > 5 || formData[j].marks[i] < 0) {
+          alert("Inconsistent data!");
+          return;
+        }
+      }
+    }
+
+    // let error = false;
+    // newData.forEach((dataRow) => {
+    //   if (dataRow.marks > 10 || dataRow.taqMarks > 10) {
+    //     alert(
+    //       `Inconsistent marks data found for enrollment number - ${dataRow.enrollmentNumber}`
+    //     );
+    //     error = true;
+    //     return;
+    //   }
+    // });
+
+    // if (error) {
+    //   error = false;
+    //   return;
+    // }
 
     const existingEnrollmentNumbers = formData.map(
       (data) => data.enrollmentNumber

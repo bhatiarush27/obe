@@ -40,22 +40,12 @@ const Layout = ({ children }) => {
 };
 
 const App = () => {
-  const [loggedInUser, setLoggedInUser] = useState({
+  const loggedInUser = {
     name: localStorage.getItem("loggedInUsername") || null,
     level: localStorage.getItem("loggedInUserLevel") || null,
-  });
+  };
   const isLoggedOut = !loggedInUser.level;
-
-  console.log("isLog", isLoggedOut, loggedInUser.level);
-
   const userPermissions = permissions[loggedInUser.level] || [];
-
-  useEffect(() => {
-    setLoggedInUser({
-      name: localStorage.getItem("loggedInUsername") || null,
-      level: localStorage.getItem("loggedInUserLevel") || null,
-    });
-  }, [localStorage.getItem("loggedInUsername")]);
 
   return (
     <Router>
